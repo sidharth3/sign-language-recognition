@@ -21,7 +21,7 @@ Run `python train.py`
 
 Files:
 
-- `asl100.ini` - configuration file containing parameters for training, optimizer and parameters for our GCN model
+- `asl100.ini` - configuration file containing parameters for training, optimizer as well as parameters for our GCN model
 - `configs.py` - configuration file
 - `dataloader.py` - file containing our Dataloader
 - `model_final.py` - file containing our GCN model
