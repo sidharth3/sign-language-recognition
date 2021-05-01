@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import print_function
@@ -16,6 +15,7 @@ class GCNLayer(nn.Module):
     def __init__(self, in_features, out_features, acti=True):
         super(GCNLayer, self).__init__()
         self.linear = nn.Linear(in_features, out_features)
+        # adding activation function ReLu
         if acti:
             self.acti = nn.ReLU(inplace=True)
         else:
@@ -35,28 +35,31 @@ class GCBlock(nn.Module):
         self.out_features = in_features
         # Set residual links to deal with gradient outflow
         self.is_resi = is_resi
+        
+        # GCN layer with batchnorm
+        self.gcn_1 = GCNLayer(in_features, in_features)
+        self.batchnorm1 = nn.BatchNorm1d(55 * in_features)
 
-        self.gc1 = GCNLayer(in_features, in_features)
-        self.bn1 = nn.BatchNorm1d(55 * in_features)
+        # GCN layer with batchnorm
+        self.gcn_2 = GCNLayer(in_features, in_features)
+        self.batchnorm2 = nn.BatchNorm1d(55 * in_features)
 
-        self.gc2 = GCNLayer(in_features, in_features)
-        self.bn2 = nn.BatchNorm1d(55 * in_features)
-
-        self.do = nn.Dropout(p_dropout)
-        self.act_f = nn.Tanh()
+        # Dropout and TanH activation function
+        self.dropout = nn.Dropout(p_dropout)
+        self.tanlayer = nn.Tanh()
 
     def forward(self, x):
-        y = self.gc1(x)
+        y = self.gcn_1(x)
         b, n, f = y.shape
-        y = self.bn1(y.view(b, -1)).view(b, n, f)
-        y = self.act_f(y)
-        y = self.do(y)
+        y = self.batchnorm1(y.view(b, -1)).view(b, n, f)
+        y = self.tanlayer(y)
+        y = self.dropout(y)
 
-        y = self.gc2(y)
+        y = self.gcn_2(y)
         b, n, f = y.shape
-        y = self.bn2(y.view(b, -1)).view(b, n, f)
-        y = self.act_f(y)
-        y = self.do(y)
+        y = self.batchnorm2(y.view(b, -1)).view(b, n, f)
+        y = self.tanlayer(y)
+        y = self.dropout(y)
         # Use residual links
         if self.is_resi:
             return y + x
@@ -69,31 +72,33 @@ class GCNMultiBlock(nn.Module):
         super(GCNMultiBlock, self).__init__()
         self.num_stage = num_stage
 
-        self.gc1 = GCNLayer(input_feature, hidden_feature)
-        self.bn1 = nn.BatchNorm1d(55 * hidden_feature)
+        self.gcn_1 = GCNLayer(input_feature, hidden_feature)
+        self.batchnorm1 = nn.BatchNorm1d(55 * hidden_feature)
 
-        self.gcbs = []
+        self.gcnblock = []
+        # adding gcb blocks into list
         for i in range(num_stage):
-            self.gcbs.append(GCBlock(hidden_feature, p_dropout=p_dropout, is_resi=is_resi))
+            self.gcnblock.append(GCBlock(hidden_feature, p_dropout=p_dropout, is_resi=is_resi))
+        
+        self.gcnblock = nn.ModuleList(self.gcnblock)
 
-        self.gcbs = nn.ModuleList(self.gcbs)
+        self.dropout = nn.Dropout(p_dropout)
+        self.tanhlayer = nn.Tanh()
 
-        self.do = nn.Dropout(p_dropout)
-        self.act_f = nn.Tanh()
-
-        self.fc_out = nn.Linear(hidden_feature, num_class)
+        self.fc_layer = nn.Linear(hidden_feature, num_class)
 
     def forward(self, x):
-        y = self.gc1(x)
+        y = self.gcn_1(x)
         b, n, f = y.shape
-        y = self.bn1(y.view(b, -1)).view(b, n, f)
-        y = self.act_f(y)
-        y = self.do(y)
+        y = self.batchnorm1(y.view(b, -1)).view(b, n, f)
+        y = self.tanhlayer(y)
+        y = self.dropout(y)
 
         for i in range(self.num_stage):
-            y = self.gcbs[i](y)
+            y = self.gcnblock[i](y)
 
         out = torch.mean(y, dim=1)
-        out = self.fc_out(out)
+        # final FC layer for classification
+        out = self.fc_layer(out)
 
         return out
