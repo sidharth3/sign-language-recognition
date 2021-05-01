@@ -106,7 +106,6 @@ class Sign_Dataset(Dataset):
 
         for i in frames_to_sample:
             pose_path = os.path.join(self.pose_directory, video_id, self.framename.format(str(i).zfill(5)))
-            # pose = cv2.imread(frame_path, cv2.COLOR_BGR2RGB)
             pose = read_pose_file(pose_path)
 
             if pose is not None:
@@ -122,7 +121,6 @@ class Sign_Dataset(Dataset):
 
         pad = None
 
-        # if len(frames_to_sample) < num_samples:
         if len(poses) < num_samples:
             num_padding = num_samples - len(frames_to_sample)
             last_pose = poses[-1]
@@ -224,8 +222,6 @@ def read_pose_file(filepath):
         ft = torch.load(os.path.join(save_to, frame_id + '_ft.pt'))
 
         xy = ft[:, :2]
-        # angles = torch.atan(ft[:, 110:]) / 90
-        # ft = torch.cat([xy, angles], dim=1)
         return xy
     except FileNotFoundError:
         
@@ -239,11 +235,9 @@ def read_pose_file(filepath):
 
         x = [v for i, v in enumerate(body_pose) if i % 3 == 0 and i // 3 not in body_pose_exclude]
         y = [v for i, v in enumerate(body_pose) if i % 3 == 1 and i // 3 not in body_pose_exclude]
-        # conf = [v for i, v in enumerate(body_pose) if i % 3 == 2 and i // 3 not in body_pose_exclude]
 
         x = 2 * ((torch.FloatTensor(x) / 256.0) - 0.5)
         y = 2 * ((torch.FloatTensor(y) / 256.0) - 0.5)
-        # conf = torch.FloatTensor(conf)
 
         x_diff = torch.FloatTensor(get_difference(x)) / 2
         y_diff = torch.FloatTensor(get_difference(y)) / 2
@@ -268,9 +262,6 @@ def read_pose_file(filepath):
         torch.save(ft, os.path.join(save_to, frame_id + '_ft.pt'))
 
         xy = ft[:, :2]
-        # angles = torch.atan(ft[:, 110:]) / 90
-        # ft = torch.cat([xy, angles], dim=1)
-        #
         return xy
     
 
