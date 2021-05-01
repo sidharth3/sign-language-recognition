@@ -81,13 +81,9 @@ class GCNMultiBlock(nn.Module):
             self.gcbs.append(GCBlock(hidden_feature, p_dropout=p_dropout, is_resi=is_resi))
 
         self.gcbs = nn.ModuleList(self.gcbs)
-
-        # self.gc7 = GraphConvolution_att(hidden_feature, output_feature)
-
         self.do = nn.Dropout(p_dropout)
         self.act_f = nn.Tanh()
 
-        # self.fc1 = nn.Linear(55 * output_feature, fc1_out)
         self.fc_out = nn.Linear(hidden_feature, num_class)
 
     def forward(self, x):
@@ -100,7 +96,6 @@ class GCNMultiBlock(nn.Module):
         for i in range(self.num_stage):
             y = self.gcbs[i](y)
 
-        # y = self.gc7(y)
         out = torch.mean(y, dim=1)
         out = self.fc_out(out)
 
@@ -113,4 +108,3 @@ if __name__ == '__main__':
     model = GCNMultiBlock(input_feature=num_samples*2, hidden_feature=256,
                          num_class=100, p_dropout=0.3, num_stage=2)
     x = torch.ones([2, 55, num_samples*2])
-    # print(model(x).size())
