@@ -10,11 +10,12 @@ from torch.nn.parameter import Parameter
 
 import numpy as np
 
-
+# Basic GCN Layer 
+# Reference: https://towardsdatascience.com/program-a-simple-graph-net-in-pytorch-e00b500a642d
 class GCNLayer(nn.Module):
     def __init__(self, in_features, out_features, acti=True):
         super(GCNLayer, self).__init__()
-        self.linear = nn.Linear(in_features, out_features) # bias = False is also ok.
+        self.linear = nn.Linear(in_features, out_features)
         if acti:
             self.acti = nn.ReLU(inplace=True)
         else:
@@ -25,14 +26,14 @@ class GCNLayer(nn.Module):
             return output
         return self.acti(output)
 
-
+# GC block module with stacked GCN and BatchNorm layers
+# BN is for standardising input to layer for each mini-batch. Helps to stablise the learning process
 class GCBlock(nn.Module):
-
     def __init__(self, in_features, p_dropout, bias=True, is_resi=True):
         super(GCBlock, self).__init__()
         self.in_features = in_features
         self.out_features = in_features
-        # Residual Linkage
+        # Set residual links to deal with gradient outflow
         self.is_resi = is_resi
 
         self.gc1 = GCNLayer(in_features, in_features)
@@ -62,12 +63,7 @@ class GCBlock(nn.Module):
         else:
             return y
 
-    def __repr__(self):
-        return self.__class__.__name__ + ' (' \
-               + str(self.in_features) + ' -> ' \
-               + str(self.out_features) + ')'
-
-
+# Multi GCBlock model with FC final layer for classification
 class GCNMultiBlock(nn.Module):
     def __init__(self, input_feature, hidden_feature, num_class, p_dropout, num_stage=1, is_resi=True):
         super(GCNMultiBlock, self).__init__()
@@ -81,6 +77,7 @@ class GCNMultiBlock(nn.Module):
             self.gcbs.append(GCBlock(hidden_feature, p_dropout=p_dropout, is_resi=is_resi))
 
         self.gcbs = nn.ModuleList(self.gcbs)
+
         self.do = nn.Dropout(p_dropout)
         self.act_f = nn.Tanh()
 
@@ -100,11 +97,3 @@ class GCNMultiBlock(nn.Module):
         out = self.fc_out(out)
 
         return out
-
-
-if __name__ == '__main__':
-    num_samples = 32
-
-    model = GCNMultiBlock(input_feature=num_samples*2, hidden_feature=256,
-                         num_class=100, p_dropout=0.3, num_stage=2)
-    x = torch.ones([2, 55, num_samples*2])

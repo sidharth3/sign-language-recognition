@@ -38,9 +38,6 @@ def run(file_split, pose_directory, configs, save_model=None):
     val_data_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=configs.batch_size,
                                                   shuffle=True)
 
-    # logging.info('\n'.join(['Class labels are: '] + [(str(i) + ' - ' + label) for i, label in
-                                                    #  enumerate(train_dataset.label_encoder.classes_)]))
-
     # setup the model
     model = GCNMultiBlock(input_feature=num_samples*2, hidden_feature=num_samples*2,
                          num_class=len(train_dataset.label_encoder.classes_), p_dropout=drop_p, num_stage=num_stages).cuda()
@@ -62,7 +59,6 @@ def run(file_split, pose_directory, configs, save_model=None):
         val_loss, val_score, val_gts, val_preds, incorrect_samples = validation(model,
                                                                                 val_data_loader, epoch,
                                                                                 save_to=save_model)
-
 
         if val_score[0] > best_test_acc:
             best_test_acc = val_score[0]
@@ -217,19 +213,11 @@ def compute_top_n_accuracy(truths, preds, n):
 
 if __name__ == "__main__":
     direc = '/home/jovyan/Documents/DL/DL_Project/WLASL'
-
     subset = 'asl100'
-
     split_file = os.path.join(direc, 'data/splits/{}.json'.format(subset))
     pose_data = os.path.join(direc, 'data/pose_per_individual_videos')
     config_file = os.path.join(direc, 'code/TGCN/configs/{}.ini'.format(subset))
     configs = Config(config_file)
-
-#     logging.basicConfig(filename='output/{}.log'.format(os.path.basename(config_file)[:-4]), level=logging.DEBUG, filemode='w+')
-
-#     logging.info('Calling main.run()')
     run(file_split=split_file, configs=configs, pose_directory=pose_data)
 
-#     logging.info('Finished main.run()')
-    # utils.plot_curves()
 
