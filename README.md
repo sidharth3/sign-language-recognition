@@ -17,7 +17,7 @@ As for our model architecture, we implemented a Graph Convolutional Network (GCN
 
 ### To run the code:
 
-(fill this up)
+Run `python train.py`
 
 Files:
 
