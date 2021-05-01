@@ -217,19 +217,11 @@ def compute_top_n_accuracy(truths, preds, n):
 
 if __name__ == "__main__":
     direc = '/home/jovyan/Documents/DL/DL_Project/WLASL'
-
     subset = 'asl100'
-
     split_file = os.path.join(direc, 'data/splits/{}.json'.format(subset))
     pose_data = os.path.join(direc, 'data/pose_per_individual_videos')
     config_file = os.path.join(direc, 'code/TGCN/configs/{}.ini'.format(subset))
     configs = Config(config_file)
-
-#     logging.basicConfig(filename='output/{}.log'.format(os.path.basename(config_file)[:-4]), level=logging.DEBUG, filemode='w+')
-
-#     logging.info('Calling main.run()')
     run(file_split=split_file, configs=configs, pose_directory=pose_data)
 
-#     logging.info('Finished main.run()')
-    # utils.plot_curves()
 
