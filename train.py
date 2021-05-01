@@ -9,13 +9,10 @@ import torch.optim as optim
 from torch.utils.data import Dataset
 import utils
 from configs import Config
-from tgcn_model import GCN_muti_att
+from model import GCNMultiBlock
 from dataloader import Sign_Dataset
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
-
-
 
 
 def run(file_split, pose_directory, configs, save_model=None):
@@ -28,15 +25,16 @@ def run(file_split, pose_directory, configs, save_model=None):
     num_stages = configs.num_stages
 
     # setup dataset
-    train_dataset = Sign_Dataset(index_file_path=file_split, split=['train', 'val'], pose_root=pose_directory,
-                                 img_transforms=None, video_transforms=None, num_samples=num_samples)
+    
+    train_dataset = Sign_Dataset(file_name_index=file_split, split=['train', 'val'], pose_directory=pose_directory, img_transforms=None, video_transforms=None, num_samples=num_samples )
 
     train_data_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=configs.batch_size,
                                                     shuffle=True)
 
-    val_dataset = Sign_Dataset(index_file_path=file_split, split='test', pose_root=pose_directory,
+    val_dataset = Sign_Dataset(file_name_index=file_split, split='test', pose_directory=pose_directory,
                                img_transforms=None, video_transforms=None,
-                               num_samples=num_samples)
+                               num_samples=num_samples, sampling_method='k_copies')
+    
     val_data_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=configs.batch_size,
                                                   shuffle=True)
 
@@ -44,7 +42,7 @@ def run(file_split, pose_directory, configs, save_model=None):
                                                     #  enumerate(train_dataset.label_encoder.classes_)]))
 
     # setup the model
-    model = GCN_muti_att(input_feature=num_samples*2, hidden_feature=num_samples*2,
+    model = GCNMultiBlock(input_feature=num_samples*2, hidden_feature=num_samples*2,
                          num_class=len(train_dataset.label_encoder.classes_), p_dropout=drop_p, num_stage=num_stages).cuda()
 
     # setup training parameters, learning rate, optimizer, scheduler
