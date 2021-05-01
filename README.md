@@ -4,7 +4,7 @@ As part of our Big Project of 50.039 Deep Learning, our team decided to tackle i
 
 ### Dataset
 
-We used the WLASL Dataset, which is the largest video dataset for Word-Level American Sign Language (ASL recognition, which features 2,000 common different words in ASL.
+We used the WLASL Dataset, which is the largest video dataset for Word-Level American Sign Language (ASL) recognition, which features 2,000 common different words in ASL.
 
 ### Architecture
 
