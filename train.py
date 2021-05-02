@@ -45,20 +45,38 @@ def run(file_split, pose_directory, configs, save_model=None):
     # setup training parameters, learning rate, optimizer, scheduler
     lr = configs.init_lr
     optimizer = optim.Adam(model.parameters(), lr=lr, eps=configs.adam_eps, weight_decay=configs.adam_weight_decay)
-
+    
+    epoch_train_losses = []
+    epoch_train_scores = []
+    epoch_val_losses = []
+    epoch_val_scores = []
 
     best_test_acc = 0
     # start training
+    current_epoch = 1
     for epoch in range(int(epochs)):
         # train, test model
 
-        print('start training.')
+        print('Training now...Epoch[{}/{}]'.format(current_epoch, epochs))
         train_losses, train_scores, train_gts, train_preds = train(log_interval, model,
                                                                    train_data_loader, optimizer, epoch)
-        print('start testing.')
+        print('Testing now...Epoch[{}/{}]'.format(current_epoch, epochs))
         val_loss, val_score, val_gts, val_preds, incorrect_samples = validation(model,
                                                                                 val_data_loader, epoch,
                                                                                 save_to=save_model)
+        
+        current_epoch+=1
+        #append training-testing loss/accuracy data
+        epoch_train_losses.append(train_losses)
+        epoch_train_scores.append(train_scores)
+        epoch_val_losses.append(val_loss)
+        epoch_val_scores.append(val_score[0])
+        
+        #save the data for plotting later
+        np.save('output/epoch_training_losses.npy', np.array(epoch_train_losses))
+        np.save('output/epoch_training_scores.npy', np.array(epoch_train_scores))
+        np.save('output/epoch_test_loss.npy', np.array(epoch_val_losses))
+        np.save('output/epoch_test_score.npy', np.array(epoch_val_scores))
 
         if val_score[0] > best_test_acc:
             best_test_acc = val_score[0]
@@ -216,7 +234,7 @@ if __name__ == "__main__":
     subset = 'asl100'
     split_file = os.path.join(direc, 'data/splits/{}.json'.format(subset))
     pose_data = os.path.join(direc, 'data/pose_per_individual_videos')
-    config_file = os.path.join(direc, 'code/TGCN/configs/{}.ini'.format(subset))
+    config_file = os.path.join(direc, 'sign-language-recognition/{}.ini'.format(subset))
     configs = Config(config_file)
     run(file_split=split_file, configs=configs, pose_directory=pose_data)
 

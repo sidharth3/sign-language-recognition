@@ -25,89 +25,6 @@ def onehot2labels(label_encoder, y_onehot):
 def cat2labels(label_encoder, y_cat):
     return label_encoder.inverse_transform(y_cat).tolist()
 
-
-# ------------------ RNN utils ------------------------##
-def init_gru(gru):
-    if isinstance(gru, nn.GRU) or isinstance(gru, nn.GRUCell):
-        for param in gru.parameters():
-            if len(param.shape) >= 2:
-                init.orthogonal_(param.data)
-            else:
-                init.normal_(param.data)
-
-def pad_and_pack_sequence(input_sequence):
-    # pad sequences to have same length
-    input_sequence = nn.utils.rnn.pad_sequence(input_sequence, batch_first=True)
-    # calculate lengths of sequences and **store in a tensor**, otherwise pytorch cannot trace correctly.
-    seq_lengths = torch.LongTensor(list(map(len, input_sequence)))
-    # create packed sequence        
-    packed_input_sequence = nn.utils.rnn.pack_padded_sequence(input_sequence, seq_lengths, batch_first=True,
-                                                              enforce_sorted=False)
-
-    return packed_input_sequence
-
-
-def batch_select_tail(batch, in_lengths):
-    """ Select tensors from a batch based on the time indices.
-    
-    E.g.     
-    batch = tensor([[[ 0,  1,  2,  3],
-                     [ 4,  5,  6,  7],
-                     [ 8,  9, 10, 11]],
-
-                     [[12, 13, 14, 15],
-                     [16, 17, 18, 19],
-                     [20, 21, 22, 23]]])
-    of size = (2, 3, 4)
-    
-    indices = tensor([1, 2])
-    
-    returns tensor([[4, 5, 6, 7],
-                    [20, 21, 22, 23]])
-    """
-    rv = torch.stack([torch.index_select(batch[i], 0, in_lengths[i] - 1).squeeze(0) for i in range(batch.size(0))])
-
-    return rv
-
-
-def batch_mean_pooling(batch, in_lengths):
-    """ Select tensors from a batch based on the input sequence lengths. And apply mean pooling over it.
-
-    E.g.
-    batch = tensor([[[ 0,  1,  2,  3],
-                     [ 4,  5,  6,  7],
-                     [ 8,  9, 10, 11]],
-
-                     [[12, 13, 14, 15],
-                     [16, 17, 18, 19],
-                     [20, 21, 22, 23]]])
-    of size = (2, 3, 4)
-
-    indices = tensor([1, 2])
-
-    returns tensor([[0, 1, 2, 3],
-                    [14, 15, 16, 17]])
-    """
-    mean = []
-
-    for idx, instance in enumerate(batch):
-        keep = instance[:int(in_lengths[idx])]
-
-        mean.append(torch.mean(keep, dim=0))
-
-    mean = torch.stack(mean, dim=0)
-    return mean
-
-
-def gather_last(batch_hidden_states, in_lengths):
-    num_hidden_states = int(batch_hidden_states.size(2))
-
-    indices = in_lengths.unsqueeze(1).unsqueeze(1) - 1
-    indices = indices.repeat(1, 1, num_hidden_states)
-
-    return torch.gather(batch_hidden_states, 1, indices).squeeze(1)
-
-
 # --------------- plotting utils -------------------- #
 
 def plot_curves(A=None, B=None, C=None, D=None):
@@ -140,7 +57,7 @@ def plot_curves(A=None, B=None, C=None, D=None):
     title = "output/curves.png"
     plt.savefig(title, dpi=600)
     # plt.close(fig)
-    # plt.show()
+    plt.show()
 
 
 def plot_confusion_matrix(y_true, y_pred, classes,
