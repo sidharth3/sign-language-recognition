@@ -1,5 +1,7 @@
 # 50.039 Deep Learning Sign Language Recognition
-### Group 6
+## Group 6
+
+### Introduction
 
 As part of our Big Project of 50.039 Deep Learning, our team decided to tackle isolated sign language recognition from signer-independent videos involving a large number of sign categories. Below is a brief overview of the project:
 
