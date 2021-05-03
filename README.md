@@ -24,6 +24,7 @@ Run `python train.py`
 
 Files:
 
+- `Notebook_Submission.ipynb` - Jupyter Notebook for our submission
 - `asl100.ini` - configuration file containing parameters for training, optimizer as well as parameters for our GCN model
 - `configs.py` - configuration file
 - `dataloader.py` - file containing our Dataloader
