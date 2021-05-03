@@ -24,15 +24,21 @@ Run `python train.py`
 
 Files:
 
+- `Notebook_Submission.ipynb` - Jupyter Notebook for our submission
 - `asl100.ini` - configuration file containing parameters for training, optimizer as well as parameters for our GCN model
 - `configs.py` - configuration file
 - `dataloader.py` - file containing our Dataloader
-- `model_final.py` - file containing our GCN model
+- `model.py` - file containing our GCN model
+- `test_w_ui.py` - UI code
 - `train.py` - file containing training and validation fuctions
 - `utils.py` - file containing one-hot encoding functions and relevant functions for plotting functions
+- `videotransforms.py` - code containing Data Augmentation functions
 
 ### To load trained model weights
 Please find saved model weights in the  ‘weights’ folder. To load a model, run the first two cells of the submission notebook, and then run the last cell. The function takes in the path of any saved weight and loads the model. This then runs the model on evaluation mode and calls the validation function, which reproduces the accuracy we obtained.
+
+### User Interface (UI) Demonstration
+The UI code can be found in `test_w_ui.py` file. The UI demo can be found on the following YouTube link: https://youtu.be/V1A4gUTmzjw. It contains an example of a successful prediction and an unsuccessful demonstration.
 
 ### Group Members:
 
