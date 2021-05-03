@@ -7,24 +7,42 @@ import math
 import torch
 import torch.nn as nn
 from torch.nn.parameter import Parameter
+from torch.nn.modules.module import Module
 
 import numpy as np
 
-# Basic GCN Layer 
-# Reference: https://towardsdatascience.com/program-a-simple-graph-net-in-pytorch-e00b500a642d
+# Basic GCN Layer
+# Paper Reference: https://arxiv.org/abs/1609.02907 & https://towardsdatascience.com/program-a-simple-graph-net-in-pytorch-e00b500a642d
+# Code implementation reference: https://github.com/tkipf/pygcn/blob/master/pygcn/layers.py
 class GCNLayer(nn.Module):
-    def __init__(self, in_features, out_features, acti=True):
+
+    def __init__(self, in_features, out_features, bias=True):
         super(GCNLayer, self).__init__()
-        self.linear = nn.Linear(in_features, out_features)
-        if acti:
-            self.acti = nn.ReLU(inplace=True)
+        self.in_features = in_features
+        self.out_features = out_features
+        self.att = Parameter(torch.FloatTensor(55, 55))
+        self.weight = Parameter(torch.FloatTensor(in_features, out_features))
+        if bias:
+            self.bias = Parameter(torch.FloatTensor(out_features))
         else:
-            self.acti = None
-    def forward(self, F):
-        output = self.linear(F)
-        if not self.acti:
+            self.register_parameter('bias', None)
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        stand_dev = 1. / math.sqrt(self.weight.size(1))
+        self.weight.data.uniform_(-stand_dev, stand_dev)
+        if self.bias is not None:
+            self.bias.data.uniform_(-stand_dev, stand_dev)
+
+    def forward(self, input):
+        support = torch.matmul(input, self.weight)  # HW computation
+        output = torch.matmul(self.att, support)  # g computation
+        if self.bias is not None:
+            return output + self.bias
+        else:
             return output
-        return self.acti(output)
+
+
 
 # GC block module with stacked GCN and BatchNorm layers
 # BN is for standardising input to layer for each mini-batch. Helps to stablise the learning process

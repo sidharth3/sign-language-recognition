@@ -11,7 +11,7 @@ import utils
 from configs import Config
 from model import GCNMultiBlock
 from dataloader import Sign_Dataset
-
+import datetime
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
@@ -113,6 +113,7 @@ def train(frequency, model, train_loader, optimizer, epoch):
 
         loss = F.cross_entropy(out, y)
 
+
         losses.append(loss.item())
 
         # to compute accuracy
@@ -136,6 +137,8 @@ def train(frequency, model, train_loader, optimizer, epoch):
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}, Accu: {:.6f}%'.format(
                 epoch + 1, train_count, len(train_loader.dataset), 100. * (batch_idx + 1) / len(train_loader), loss.item(),
                 100 * step_score))
+            name = datetime.datetime.now().strftime("%Y_%m_%d-%I:%M:%S_%p")
+            save_model(model, os.path.join('weights',"model_{}.pt".format(name)))
 
     return losses, scores, train_labels, train_preds
 
@@ -227,6 +230,59 @@ def compute_top_n_accuracy(truths, preds, n):
         if ts[i] in best_n[i, :]:
             successes += 1
     return float(successes) / ts.shape[0]
+
+def save_model(model, path, test=True):
+    '''
+    Saves the model at a desired point in time 
+    
+    Parameters 
+    - model should take in a pytorch model 
+    - path the path to save the model 
+    
+    '''
+    if test == False:
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss
+            }, path)
+    else:
+        torch.save(model.state_dict(), path)
+        
+        
+def load_model(path, configs, num_class, test=True):
+    '''
+    Loads a previously saved model and runs it 
+    
+    Parameters 
+    - path where the saved model is stored
+    - test whether the model will be used for testing
+    
+    '''
+    epochs = configs.max_epochs
+    log_interval = configs.log_interval
+    num_samples = configs.num_samples
+    hidden_size = configs.hidden_size
+    drop_p = configs.drop_p
+    num_stages = configs.num_stages
+    model = GCNMultiBlock(input_feature=num_samples*2, hidden_feature=num_samples*2,
+                         num_class=num_class, p_dropout=drop_p, num_stage=num_stages).cuda()
+
+    
+    if test == False:
+        checkpoint = torch.load(path)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        epoch = checkpoint['epoch']
+        loss = checkpoint['loss']
+        model.train()
+        
+    else:
+        model.load_state_dict(torch.load(path))
+        model.eval()
+    
+    return model
 
 
 if __name__ == "__main__":

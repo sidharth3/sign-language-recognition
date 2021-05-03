@@ -14,6 +14,7 @@ import utils
 from torch.utils.data import Dataset
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 
+
 class Sign_Dataset(Dataset):
 
     def __init__(self, file_name_index, split, pose_directory, sampling_method='random', num_samples=25, num_copies=4,
